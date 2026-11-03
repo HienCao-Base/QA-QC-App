@@ -1,0 +1,94 @@
+▶ Nhóm 1 · Phân quyền (API)
+  ✔ PQ-01 CHT không xem được phiếu của cửa hàng khác (3116.4714ms)
+  ✔ PQ-02 Phiếu nháp chỉ QA lập phiếu thấy (2959.1136ms)
+  ✔ PQ-03 Nhân viên chỉ xem phiếu của cửa hàng mình (2106.7982ms)
+  ✔ PQ-04 CHT / NV / Admin không tạo được phiếu (826.7865ms)
+  ✔ PQ-05 Không sửa thẳng bảng phiếu / dòng lỗi để vượt quy trình (5364.0883ms)
+  ✔ PQ-06 QA khác không phát hành / sửa / chốt / trả lại / hủy phiếu của QA1 (4667.0254ms)
+  ✔ PQ-07 CHT cửa hàng khác không giải trình / khiếu nại được (3524.5108ms)
+  ✔ PQ-08 Nhân viên: không gửi được, không giải trình lỗi của người khác (4263.4034ms)
+  ✔ PQ-09 Chỉ Admin mở lại phiếu / xử lý khiếu nại (5578.4571ms)
+  ✔ PQ-10 Admin không phát hành / chốt thay QA (1869.2276ms)
+  ✔ PQ-11 Tài khoản không có hồ sơ (tự đăng ký) không làm được gì (5824.5046ms)
+  ✔ PQ-12 Tài khoản đã khóa (active=false) không thao tác được (1476.1028ms)
+  ✔ PQ-13 Chưa đăng nhập: không đọc / gọi được gì (2852.0598ms)
+  ✔ PQ-14 Không gọi được hàm nội bộ (gửi thông báo, ghi lịch sử, job hạn) (3490.0564ms)
+  ✔ PQ-15 Người không phải Admin không sửa được danh mục / tài khoản (3314.0126ms)
+  ✔ PQ-16 Thông báo: chỉ đọc / đánh dấu thông báo của mình (1719.3344ms)
+  ✔ PQ-17 QA không cài sẵn trạng thái khiếu nại / kết quả vào phiếu nháp (291.7842ms)
+  ✖ PQ-18 Ảnh minh chứng: cửa hàng khác không đọc được (1875.9039ms)
+✖ Nhóm 1 · Phân quyền (API) (63236.5906ms)
+▶ Nhóm 2 · Vòng đời phiếu
+  ✔ VD-01 Phát hành: mã phiếu, hạn 48h, snapshot lỗi, báo cửa hàng (2690.5012ms)
+  ✔ VD-02 Không phát hành phiếu rỗng / thiếu ảnh / phát hành 2 lần (2476.1786ms)
+  ✔ VD-03 Không phát hành lỗi đã ngưng áp dụng (805.0134ms)
+  ✔ VD-04 Lưu nháp giải trình giữ trạng thái; NV soạn thì CHT được báo (2713.8735ms)
+  ✔ VD-05 CHT gửi: chờ chốt, lỗi bỏ trống = chấp nhận, QA được báo (2513.3522ms)
+  ✔ VD-06 Không đồng ý mà không ghi giải trình thì không gửi được (1389.3203ms)
+  ✔ VD-07 QA chốt: khóa, tổng tiền, báo cửa hàng kèm hạn khiếu nại (3266.8845ms)
+  ✔ VD-08 Khiếu nại → Admin chấp nhận giảm: lưu mức QA cũ, báo đủ bên (4690.5387ms)
+  ✔ VD-09 Khiếu nại → Admin giữ nguyên (2951.5523ms)
+  ✔ VD-10 Admin mở lại → chờ chốt → QA chốt lại (3199.9172ms)
+  ✔ VD-11 Trả lại cửa hàng: về chờ giải trình, hạn 48h mới, giữ giải trình (2675.7227ms)
+  ✔ VD-12 Hủy phiếu: được khi chờ giải trình, không được sau khi cửa hàng gửi (3228.6113ms)
+  ✔ VD-13 Quá hạn: tự khóa theo mức đề xuất, CHT không gửi được nữa (2793.5094ms)
+  ✔ VD-14 Xóa phiếu nháp được; phiếu đã phát hành không xóa được (2417.7967ms)
+  ✔ VD-15 Lịch sử phiếu ghi đủ các bước (2403.0829ms)
+✔ Nhóm 2 · Vòng đời phiếu (40218.9847ms)
+▶ Nhóm 3 · Quy tắc nghiệp vụ
+  ✔ NV-01 Chốt cao hơn mức đề xuất bị từ chối (mọi cách) (3704.3445ms)
+  ✔ NV-02 Giảm phải nhỏ hơn mức đề xuất; không âm (2935.3726ms)
+  ✔ NV-03 Lý do giảm / miễn tối thiểu 15 ký tự (khoảng trắng không tính) (4004.2225ms)
+  ✔ NV-04 Phải chốt đủ lỗi, không chốt lỗi của phiếu khác (4267.3364ms)
+  ✔ NV-05 Chốt khi chưa ở trạng thái chờ chốt bị từ chối (3719.2657ms)
+  ✔ NV-06 Khiếu nại: 1 lần, trong 24h, lý do ≥ 15 ký tự (6760.8991ms)
+  ✔ NV-07 Sau khi Admin xử lý, không khiếu nại lại được (2918.8743ms)
+  ✔ NV-08 Admin xử lý: không tăng tiền, chấp nhận phải giảm ít nhất 1 lỗi, lý do ≥ 15 (6400.898ms)
+  ✔ NV-09 Không mở lại phiếu đang có khiếu nại; lý do mở lại ≥ 15 (4528.9596ms)
+  ✔ NV-10 Trả lại cửa hàng: lý do ≥ 15, chỉ khi chờ chốt (2634.019ms)
+  ✔ NV-11 Mở lại phiếu đã xử lý khiếu nại: QA không được chốt cao hơn mức Admin đã giảm (3448.7978ms)
+  ✔ NV-12 Sửa nhỏ không cần lý do; đổi lỗi / nhân viên / thêm lỗi bắt buộc lý do (3032.4228ms)
+  ✔ NV-13 Đổi lỗi: xóa giải trình cũ của lỗi đó, gia hạn còn ≥ 24h (2432.8224ms)
+  ✔ NV-14 Không xóa ảnh đã phát hành; nhân viên khác cửa hàng / lỗi ngưng áp dụng bị từ chối (2126.8778ms)
+  ✔ NV-15 Không sửa phiếu sau khi cửa hàng gửi hoặc đã quá hạn (3438.7354ms)
+  ✔ NV-16 Xóa lỗi: bắt buộc lý do, phải còn ít nhất 1 lỗi (2153.8556ms)
+  ⚠ NV-17 Lý do hủy phiếu / xóa lỗi cũng phải đủ 15 ký tự (nhất quán) (1875.0473ms) # Chờ chủ sản phẩm quyết định
+✔ Nhóm 3 · Quy tắc nghiệp vụ (60385.1523ms)
+▶ Nhóm 5 · Thông báo (API)
+  ✔ TB-01 Mỗi bước báo đúng người, không báo nhầm (3748.4608ms)
+  ✔ TB-02 Đánh dấu đã đọc từng thông báo, đếm chưa đọc đúng (1886.9669ms)
+  ✔ TB-03 Người dùng không sửa được nội dung thông báo của mình (1621.3268ms)
+✔ Nhóm 5 · Thông báo (API) (7257.1131ms)
+ℹ tests 53
+ℹ suites 4
+ℹ pass 51
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 1
+ℹ duration_ms 181595.4965
+
+✖ failing tests:
+
+test at tests\api.test.mjs:194:3
+✖ PQ-18 Ảnh minh chứng: cửa hàng khác không đọc được (1875.9039ms)
+  AssertionError [ERR_ASSERTION]: CHT cửa hàng 1 tạo được link xem ảnh phiếu cửa hàng 2
+  + actual - expected
+  
+  + 'https://ocxynplwtpklyvfsioru.supabase.co/storage/v1/object/sign/evidence/test/sample.jpg?token=eyJraWQiOiI5NjJkOTAzNC1hNjZmLTQ4ZGMtYThiNi0zYWNhYWU4YTFjMDMiLCJhbGciOiJIUzUxMiJ9.eyJ1cmwiOiJldmlkZW5jZS90ZXN0L3NhbXBsZS5qcGciLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzkzNjkxNDgzLCJleHAiOjE3OTM2OTE1NDN9.FGNbsNPw0WvEIGjfpE1KPSFBMnYH0Dyh03clEMz36C3LuiYDHMGVBnZHLcAaWPmFiLAo63yjNcLp32Rv7C9jyQ'
+  - null
+  
+  }
+
+test at tests\api.test.mjs:533:3
+⚠ NV-17 Lý do hủy phiếu / xóa lỗi cũng phải đủ 15 ký tự (nhất quán) (1875.0473ms) # Chờ chủ sản phẩm quyết định
+  AssertionError [ERR_ASSERTION]: chấp nhận lý do 1 ký tự ở: deleteItem, cancel
+  + actual - expected
+  
+  + [
+  +   'deleteItem',
+  +   'cancel'
+  + ]
+  - []
+  
+  }
