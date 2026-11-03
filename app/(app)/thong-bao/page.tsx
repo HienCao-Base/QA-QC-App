@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Pager } from "@/components/pager";
 import { pageParam } from "@/lib/queries";
 
-const SIZE = 20; 
+const SIZE = 20;  
 
 export default async function Notifications(props: PageProps<"/thong-bao">) {
   const user = await getCurrentUser();
