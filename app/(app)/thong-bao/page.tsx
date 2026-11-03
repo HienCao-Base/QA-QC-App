@@ -5,17 +5,30 @@ import { dateTime, cn } from "@/lib/format";
 import { markAllRead, openNotification } from "@/app/actions";
 import { Empty, PageTitle, Panel } from "@/components/common";
 import { Button } from "@/components/ui/button";
+import { Pager } from "@/components/pager";
+import { pageParam } from "@/lib/queries";
 
-export default async function Notifications() {
+const SIZE = 20; 
+
+export default async function Notifications(props: PageProps<"/thong-bao">) {
   const user = await getCurrentUser();
   const supabase = await createClient();
+  const [{ count }, { count: unreadCount }] = await Promise.all([
+    supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("read_at", null),
+  ]);
+  const unread = unreadCount ?? 0;
+  const total = count ?? 0;
+  const pages = Math.max(1, Math.ceil(total / SIZE));
+  // trang vượt quá (VD: gõ tay ?page=99) -> trang cuối
+  const page = Math.min(pageParam((await props.searchParams).page), pages);
   const { data } = await supabase
     .from("notifications")
     .select("id, message, ticket_id, read_at, created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(100);
-  const unread = data?.filter((n) => !n.read_at).length ?? 0;
+    .order("id", { ascending: false })
+    .range((page - 1) * SIZE, page * SIZE - 1);
 
   return (
     <div>
@@ -76,6 +89,15 @@ export default async function Notifications() {
       ) : (
         <Empty icon={<BellOff />}>Chưa có thông báo nào.</Empty>
       )}
+      <Pager
+        className="mt-4"
+        page={page}
+        pages={pages}
+        total={total}
+        size={SIZE}
+        unit="thông báo"
+        href={(p) => (p > 1 ? `/thong-bao?page=${p}` : "/thong-bao")}
+      />
     </div>
   );
 }

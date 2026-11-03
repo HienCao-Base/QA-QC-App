@@ -181,6 +181,29 @@ describe("Nhóm 7 · Màn hình & mobile", () => {
     await page.done("MH-03");
   });
 
+  test("MH-05 Đang đăng nhập mà tài khoản bị khóa / bị xóa: tự đăng xuất, không lặp chuyển hướng", async () => {
+    // bị khóa
+    const a = await phone("test.qa2");
+    await svc.from("profiles").update({ active: false }).eq("id", uid("test.qa2"));
+    try {
+      await a.goto(BASE + "/");
+      await a.waitForURL(/\/login\?error=inactive/, T);
+      await a.getByText(/đã bị khóa/).waitFor(T);
+      await a.goto(BASE + "/phieu");
+      await a.waitForURL(/\/login/, T); // cookie đã bị xóa: chuyển về đăng nhập bình thường
+    } finally {
+      await svc.from("profiles").update({ active: true }).eq("id", uid("test.qa2"));
+      await a.done("MH-05-khoa");
+    }
+    // bị xóa hẳn (VD: phiên cũ của tài khoản test đã dọn)
+    const b = await phone("test.nv2");
+    await svc.auth.admin.deleteUser(uid("test.nv2"));
+    await b.goto(BASE + "/");
+    await b.waitForURL(/\/login\?error=/, T);
+    await b.getByRole("button", { name: "Đăng nhập" }).waitFor(T);
+    await b.done("MH-05-xoa");
+  });
+
   test("MH-04 Bộ lọc danh sách phiếu (bảng trượt trên điện thoại)", async () => {
     await issued({ store: "TST2", items: [{ vt: "DP01", emp: "TNV3" }] });
     const page = await phone("test.admin");
@@ -194,6 +217,80 @@ describe("Nhóm 7 · Màn hình & mobile", () => {
     const stores = await page.locator("main a[href^='/phieu/']").allInnerTexts();
     assert.ok(stores.length > 0 && stores.every((s) => s.includes("TEST Cửa hàng 2")), "lọc theo cửa hàng sai: " + stores.slice(0, 3).join(" | "));
     await page.done("MH-04");
+  });
+});
+
+// =====================================================================
+describe("Nhóm 7b · Phân trang", () => {
+  test("PT-01 Danh sách phiếu: 20/trang, giữ bộ lọc, tổng tiền tính trên toàn bộ kết quả", { timeout: 240_000 }, async () => {
+    const lockedIds = [await locked(), await locked()];
+    for (let i = 0; i < 30; i++) await issued();
+    const page = await phone("test.admin");
+    await open(page, `/phieu?store=${ctx.store.TST1}`);
+    const rows = () => page.locator("main ul.divide-y > li").count();
+    const nav = page.getByRole("navigation", { name: "Phân trang" });
+    assert.equal(await rows(), 20);
+    await nav.getByText("1–20 / 32 phiếu").waitFor(T);
+    await nav.getByRole("link", { name: "Trang sau" }).tap();
+    await page.waitForURL(/page=2/, T);
+    await page.waitForLoadState("networkidle");
+    assert.equal(await rows(), 12);
+    assert.match(page.url(), /store=/, "sang trang 2 mất bộ lọc cửa hàng");
+    assert.ok(await nav.getByRole("button", { name: "Trang sau" }).isDisabled(), "trang cuối mà nút Sau vẫn bật");
+    // đổi bộ lọc trạng thái -> về trang 1
+    await page.getByRole("link", { name: "Đã khóa", exact: true }).tap();
+    await page.waitForURL(/status=locked/, T);
+    assert.doesNotMatch(page.url(), /page=/);
+    await page.waitForLoadState("networkidle");
+    assert.equal(await rows(), 2);
+    assert.equal(await nav.count(), 0, "chỉ 1 trang mà vẫn hiện phân trang");
+    // số trang vượt quá -> về trang cuối, không trang trắng
+    await open(page, `/phieu?store=${ctx.store.TST1}&page=99`);
+    assert.equal(await rows(), 12);
+    const p = await screenOk(page, "phân trang");
+    assert.equal(p, null, p);
+    // tổng tiền đã chốt = 2 phiếu khóa, tính trên toàn bộ kết quả lọc (cần migration 0008)
+    await open(page, `/phieu?store=${ctx.store.TST1}&page=2`);
+    const sum = (await Promise.all(lockedIds.map(itemsOf))).flat().reduce((a, i) => a + i.final_amount, 0);
+    const shown = page.locator("h1 ~ *").getByText(`${new Intl.NumberFormat("vi-VN").format(sum)}đ`, { exact: true }).first();
+    await shown.waitFor(T).catch(() => {});
+    const visible = await shown.isVisible();
+    await page.done("PT-01");
+    assert.ok(visible, "không thấy tổng tiền đã chốt của toàn bộ kết quả (đã chạy migration 0008 chưa?)");
+  });
+
+  test("PT-02 Thông báo: 30/trang", { timeout: 120_000 }, async () => {
+    const total = (await svc.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", uid("test.cht1"))).count;
+    assert.ok(total > 30, `cần > 30 thông báo để kiểm, đang có ${total}`);
+    const page = await phone("test.cht1");
+    await open(page, "/thong-bao");
+    assert.equal(await page.locator("main ul.divide-y > li").count(), 30);
+    await page.getByRole("navigation", { name: "Phân trang" }).getByRole("link", { name: "Trang sau" }).tap();
+    await page.waitForURL(/page=2/, T);
+    await page.waitForLoadState("networkidle");
+    assert.equal(await page.locator("main ul.divide-y > li").count(), Math.min(30, total - 30));
+    await open(page, "/thong-bao?page=99");
+    assert.equal(await page.locator("main ul.divide-y > li").count(), total - 30 * (Math.ceil(total / 30) - 1), "trang vượt quá không về trang cuối");
+    await page.done("PT-02");
+  });
+
+  test("PT-03 Bảng Quản trị: 20/trang, tìm kiếm về trang 1", { timeout: 120_000 }, async () => {
+    await svc.from("employees").insert(
+      Array.from({ length: 25 }, (_, i) => ({ code: `TNVX${String(i).padStart(2, "0")}`, full_name: `TEST Phân trang ${i}`, store_id: ctx.store.TST1 })),
+    );
+    const page = await phone("test.admin");
+    await open(page, "/admin?tab=employees");
+    const items = () => page.locator("main ul.divide-y button").count();
+    const nav = page.getByRole("navigation", { name: "Phân trang" });
+    assert.equal(await items(), 20);
+    await nav.getByRole("button", { name: "Trang sau" }).tap();
+    await nav.getByText(/^21–/).waitFor(T);
+    assert.ok((await items()) > 0);
+    await page.getByRole("searchbox").fill("TEST Phân trang 1");
+    await page.waitForTimeout(300);
+    assert.ok((await items()) > 0, "tìm kiếm khi đang ở trang 2 ra trang trống");
+    assert.equal(await nav.count(), 0);
+    await page.done("PT-03");
   });
 });
 

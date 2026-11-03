@@ -2,10 +2,11 @@ import Link from "next/link";
 import { Download, X } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { listTickets } from "@/lib/queries";
+import { listTicketsPage, lockedTotal, pageParam, type TicketFilter } from "@/lib/queries";
 import { STATUS_DOT, STATUS_LABEL, cn, money } from "@/lib/format";
 import { isStoreRole, type TicketStatus } from "@/lib/types";
-import { TicketList, ticketTotal } from "@/components/ticket-card";
+import { TicketList } from "@/components/ticket-card";
+import { Pager } from "@/components/pager";
 import { PageTitle } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Filters, type FilterValues } from "./filters";
@@ -23,24 +24,26 @@ export default async function TicketListPage(props: PageProps<"/phieu">) {
   const f: FilterValues = { status: one("status"), store: one("store"), from: one("from"), to: one("to"), code: one("code") };
 
   const supabase = await createClient();
-  const [tickets, { data: stores }] = await Promise.all([
-    listTickets(supabase, {
-      status: f.status ? [f.status as TicketStatus] : STATUSES,
-      storeId: f.store || undefined,
-      from: f.from || undefined,
-      to: f.to || undefined,
-      code: f.code || undefined,
-    }),
+  const filter: TicketFilter = {
+    status: f.status ? [f.status as TicketStatus] : STATUSES,
+    storeId: f.store || undefined,
+    from: f.from || undefined,
+    to: f.to || undefined,
+    code: f.code || undefined,
+  };
+  const [list, total, { data: stores }] = await Promise.all([
+    listTicketsPage(supabase, filter, pageParam(sp.page)),
+    lockedTotal(supabase, filter),
     supabase.from("stores").select("id, code, name").order("code"),
   ]);
+  const tickets = list.rows;
 
   const qs = new URLSearchParams(Object.entries(f).filter(([, v]) => v)).toString();
-  const lockedTotal = tickets.filter((t) => t.status === "locked").reduce((s, t) => s + ticketTotal(t), 0);
 
-  /** Link giữ các bộ lọc hiện tại, thay / bỏ một số khóa. */
-  const link = (patch: Partial<FilterValues>) => {
+  /** Link giữ các bộ lọc hiện tại, thay / bỏ một số khóa. Đổi bộ lọc thì về trang 1. */
+  const link = (patch: Partial<FilterValues>, page = 1) => {
     const p = new URLSearchParams(
-      Object.entries({ ...f, ...patch }).filter(([, v]) => v) as [string, string][],
+      Object.entries({ ...f, ...patch, page: page > 1 ? String(page) : "" }).filter(([, v]) => v) as [string, string][],
     ).toString();
     return `/phieu${p ? `?${p}` : ""}`;
   };
@@ -58,8 +61,13 @@ export default async function TicketListPage(props: PageProps<"/phieu">) {
         title={storeUser ? "Phiếu của cửa hàng" : "Tất cả phiếu"}
         sub={
           <>
-            <span className="tnum">{tickets.length}</span> phiếu · đã chốt{" "}
-            <span className="tnum font-medium text-foreground">{money(lockedTotal)}</span>
+            <span className="tnum">{list.count}</span> phiếu
+            {total != null && (
+              <>
+                {" "}
+                · đã chốt <span className="tnum font-medium text-foreground">{money(total)}</span>
+              </>
+            )}
           </>
         }
         action={
@@ -124,6 +132,14 @@ export default async function TicketListPage(props: PageProps<"/phieu">) {
       )}
 
       <TicketList tickets={tickets} showStore={!storeUser} empty="Không có phiếu nào khớp bộ lọc." />
+      <Pager
+        page={list.page}
+        pages={list.pages}
+        total={list.count}
+        size={list.size}
+        unit="phiếu"
+        href={(p) => link({}, p)}
+      />
     </div>
   );
 }

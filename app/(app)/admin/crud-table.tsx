@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { ActionResult } from "@/app/actions";
 import { cn } from "@/lib/format";
 import { Empty, Panel } from "@/components/common";
+import { Pager } from "@/components/pager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field as FieldBox, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -43,6 +44,8 @@ function ActiveBadge({ on }: { on: boolean }) {
   );
 }
 
+const PAGE = 20; 
+
 export function CrudTable({
   title,
   rows,
@@ -58,6 +61,7 @@ export function CrudTable({
 }) {
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const cols = fields.filter((f) => f.inTable);
   const textCols = cols.filter((c) => c.type !== "checkbox");
   const activeCol = cols.find((c) => c.type === "checkbox");
@@ -65,6 +69,9 @@ export function CrudTable({
   const cell = (c: Field, r: Record<string, unknown>) => (c.format ? c.format(r[c.key], r) : String(r[c.key] ?? ""));
   const q = query.trim().toLowerCase();
   const shown = q ? rows.filter((r) => cols.some((c) => cell(c, r).toLowerCase().includes(q))) : rows;
+  const pages = Math.max(1, Math.ceil(shown.length / PAGE));
+  const current = Math.min(page, pages); // danh sách ngắn lại (tìm kiếm, xóa) thì không đứng ở trang trống
+  const pageRows = shown.slice((current - 1) * PAGE, current * PAGE);
 
   return (
     <div className="space-y-3">
@@ -77,7 +84,10 @@ export function CrudTable({
             type="search"
             placeholder={`Tìm trong ${title.toLowerCase()}…`}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
             aria-label={`Tìm trong ${title.toLowerCase()}`}
           />
         </InputGroup>
@@ -97,7 +107,7 @@ export function CrudTable({
           {/* Điện thoại: danh sách */}
           <Panel className="md:hidden">
             <ul className="divide-y">
-              {shown.map((r) => (
+              {pageRows.map((r) => (
                 <li key={String(r.id)}>
                   <button
                     type="button"
@@ -138,7 +148,7 @@ export function CrudTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {shown.map((r) => (
+                {pageRows.map((r) => (
                   <TableRow key={String(r.id)}>
                     {cols.map((c, i) => (
                       <TableCell key={c.key} className={cn("px-4 py-2.5 whitespace-normal", i === 0 && "font-medium")}>
@@ -155,6 +165,7 @@ export function CrudTable({
               </TableBody>
             </Table>
           </Panel>
+          <Pager page={current} pages={pages} total={shown.length} size={PAGE} unit="mục" onPage={setPage} />
         </>
       )}
 

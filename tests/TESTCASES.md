@@ -128,6 +128,10 @@ Lưu ý: mã phiếu dùng chung dãy số với phiếu thật, nên số thứ
 | MH-02 | Mỗi role (QA, CHT, NV, Admin) mở mọi màn và trang phiếu ở mọi trạng thái (nháp, chờ giải trình, chờ chốt, đã khóa, đang khiếu nại) và mọi tab Admin. Kiểm tra: không lỗi JS, không cuộn ngang, có tiêu đề, vùng chạm ≥ 32px |
 | MH-03 | Tab dưới đáy, ẩn tab trong trang phiếu, nút quay lại, menu tài khoản, đăng xuất xong không vào lại được |
 | MH-04 | Bộ lọc dạng bảng trượt: lọc theo cửa hàng ra đúng kết quả |
+| MH-05 | Đang đăng nhập mà tài khoản bị khóa / bị xóa: tự đăng xuất, báo lý do, không lặp chuyển hướng (ERR_TOO_MANY_REDIRECTS) |
+| PT-01 | Danh sách phiếu 20/trang: sang trang giữ bộ lọc, nút Sau khóa ở trang cuối, đổi bộ lọc về trang 1, 1 trang thì ẩn phân trang, `?page=99` về trang cuối, tổng tiền đã chốt tính trên toàn bộ kết quả |
+| PT-02 | Thông báo 30/trang, `?page=99` về trang cuối |
+| PT-03 | Bảng Quản trị 20/trang, gõ tìm kiếm khi đang ở trang 2 thì về trang 1 |
 
 ### Nhóm 8 · Kiểm tra tĩnh
 

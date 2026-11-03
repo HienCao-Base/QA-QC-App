@@ -224,7 +224,8 @@ Trang **Quản trị** có 4 tab. Bấm **Thêm** để tạo mới, bấm vào 
 ---
 
 ## 8. Danh sách phiếu, lọc và xuất Excel (mọi vai trò)
-- Tab **Phiếu** hiện danh sách phiếu bạn được xem, tổng số phiếu và tổng tiền đã chốt.
+- Tab **Phiếu** hiện danh sách phiếu bạn được xem, tổng số phiếu và tổng tiền đã chốt (tính trên toàn bộ kết quả lọc).
+- Mỗi trang hiện **20 phiếu**. Dùng nút **‹ ›** (hoặc số trang trên máy tính) ở cuối danh sách để chuyển trang. Trang Thông báo hiện 30 cái mỗi trang; các bảng trong Quản trị hiện 20 dòng mỗi trang.
 - **Lọc nhanh** theo trạng thái bằng các nút ở đầu danh sách.
 - **Tìm theo mã phiếu** ở ô tìm kiếm.
 - Bấm **Lọc** để chọn cửa hàng và khoảng ngày kiểm tra. Bộ lọc đang bật hiện thành nhãn, bấm ✕ trên nhãn để bỏ.

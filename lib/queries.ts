@@ -60,7 +60,16 @@ export async function listTickets(supabase: SupabaseClient, f: TicketFilter = {}
 }
 
 async function queryTickets(supabase: SupabaseClient, f: TicketFilter, select: string) {
-  let q = supabase.from("tickets").select(select);
+  return (await runTicketQuery(supabase, f, select)).rows;
+}
+
+async function runTicketQuery(
+  supabase: SupabaseClient,
+  f: TicketFilter,
+  select: string,
+  page?: { index: number; size: number },
+) {
+  let q = supabase.from("tickets").select(select, page ? { count: "exact" } : undefined);
   if (f.status?.length) q = q.in("status", f.status);
   if (f.createdBy) q = q.eq("created_by", f.createdBy);
   if (f.storeId) q = q.eq("store_id", f.storeId);
@@ -68,11 +77,47 @@ async function queryTickets(supabase: SupabaseClient, f: TicketFilter, select: s
   if (f.to) q = q.lte("inspected_at", `${f.to}T23:59:59+07:00`);
   if (f.code) q = q.ilike("code", `%${f.code}%`);
   if (f.appealPending) q = q.eq("appeal_status", "pending");
-  const { data, error } = await q
-    .order(f.orderBy ?? "created_at", { ascending: f.ascending ?? false })
-    .limit(f.limit ?? 200);
+  q = q.order(f.orderBy ?? "created_at", { ascending: f.ascending ?? false });
+  const { data, error, count } = page
+    ? await q.range(page.index * page.size, page.index * page.size + page.size - 1)
+    : await q.limit(f.limit ?? 200);
   if (error) throw Object.assign(new Error(error.message), { code: error.code });
-  return (data ?? []) as unknown as TicketRow[];
+  return { rows: (data ?? []) as unknown as TicketRow[], count: count ?? 0 };
+}
+
+export const PAGE_SIZE = 20;
+
+/** Đọc số trang (bắt đầu từ 1) từ URL; giá trị lạ -> 1. */
+export const pageParam = (v: unknown) => Math.max(1, Math.floor(Number(typeof v === "string" ? v : 1)) || 1);
+
+/**
+ * Một trang phiếu + tổng số phiếu khớp bộ lọc (để vẽ phân trang).
+ * Trang vượt quá số trang thực tế (VD: vừa lọc hẹp lại) -> trả về trang cuối.
+ */
+export async function listTicketsPage(supabase: SupabaseClient, f: TicketFilter, page: number, size = PAGE_SIZE) {
+  try {
+    const r = await runTicketQuery(supabase, f, TICKET_LIST_SELECT, { index: page - 1, size });
+    return { ...r, page, pages: Math.max(1, Math.ceil(r.count / size)), size };
+  } catch (e) {
+    // Trang vượt quá số trang (PostgREST báo PGRST103, VD: vừa lọc hẹp lại) -> trang cuối
+    if ((e as { code?: string }).code !== "PGRST103" || page === 1) throw e;
+    const { count } = await runTicketQuery(supabase, f, "id", { index: 0, size: 1 });
+    const pages = Math.max(1, Math.ceil(count / size));
+    const r = await runTicketQuery(supabase, f, TICKET_LIST_SELECT, { index: pages - 1, size });
+    return { ...r, page: pages, pages, size };
+  }
+}
+
+/** Tổng tiền đã chốt của TOÀN BỘ phiếu khớp bộ lọc (hàm SQL 0008). null nếu chưa chạy migration. */
+export async function lockedTotal(supabase: SupabaseClient, f: TicketFilter): Promise<number | null> {
+  const { data, error } = await supabase.rpc("ticket_locked_total", {
+    p_status: f.status?.length ? f.status : null,
+    p_store: f.storeId ?? null,
+    p_from: f.from ? `${f.from}T00:00:00+07:00` : null,
+    p_to: f.to ? `${f.to}T23:59:59+07:00` : null,
+    p_code: f.code || null,
+  });
+  return error ? null : Number(data ?? 0);
 }
 
 /** Tạo signed URL (1 giờ) cho danh sách ảnh. */

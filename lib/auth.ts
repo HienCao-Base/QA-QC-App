@@ -7,11 +7,15 @@ import type { Profile, Role } from "@/lib/types";
 export const USERNAME_DOMAIN = "qaqc.example.com";
 export const usernameToEmail = (u: string) => `${u.trim().toLowerCase()}@${USERNAME_DOMAIN}`;
 
-/** Người dùng hiện tại (đọc 1 lần mỗi request). Chưa đăng nhập -> /login. */
+/**
+ * Người dùng hiện tại (đọc 1 lần mỗi request).
+ * Phiên không dùng được (hết hạn, tài khoản bị xóa / khóa / không có hồ sơ) -> /logout xóa cookie rồi về /login.
+ * Không chuyển thẳng về /login: cookie cũ vẫn còn nên proxy.ts sẽ đẩy ngược về "/" -> vòng lặp.
+ */
 export const getCurrentUser = cache(async (): Promise<Profile> => {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect("/login");
+  if (!auth.user) redirect("/logout?error=session");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -19,7 +23,7 @@ export const getCurrentUser = cache(async (): Promise<Profile> => {
     .eq("id", auth.user.id)
     .single();
 
-  if (!profile || !profile.active) redirect("/login?error=inactive");
+  if (!profile || !profile.active) redirect("/logout?error=inactive");
   const store = profile.stores as unknown as { name: string } | null;
   return {
     id: profile.id,

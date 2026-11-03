@@ -27,6 +27,7 @@ Yêu cầu: Node.js ≥ 20, một project Supabase (nên chọn region Singapore
    | `0005_kiem_soat_chot.sql` | Chốt ≤ mức đề xuất, lý do ≥ 15 ký tự, trả lại cửa hàng, khiếu nại lên Admin |
    | `0006_va_loi_kiem_thu.sql` | Vá bảo mật từ bộ kiểm thử (tài khoản bị khóa, quyền ghi cột, quyền xem ảnh, …) |
    | `0007_ly_do_toi_thieu.sql` | Lý do hủy phiếu / xóa lỗi / sửa lớn ≥ 15 ký tự |
+   | `0008_tong_tien_danh_sach.sql` | Hàm tính tổng tiền đã chốt trên toàn bộ kết quả lọc (phân trang) |
 
    Khi thêm migration mới: đặt số tiếp theo, ghi vào bảng này và chạy trên **mọi** môi trường.
 3. **Khai báo khóa:** sao chép `.env.example` thành `.env.local`, điền 3 giá trị lấy từ *Project Settings → API*:
@@ -78,6 +79,11 @@ Trình duyệt ──Server Action / RSC──▶ Next.js server ──supabase-
 - **Ảnh** lưu ở bucket riêng tư `evidence`, xem qua signed URL (1 giờ). Người dùng chỉ xem được ảnh của phiếu mình có quyền xem.
 - **Job** `process_deadlines` chạy mỗi 5 phút (pg_cron): tự khóa phiếu quá hạn theo mức đề xuất, nhắc hạn trước 24h và 4h.
 - **Thông báo** là bảng `notifications`; chuông nhận realtime qua Supabase Realtime. Số chưa đọc luôn do server đếm.
+- **Phân trang:** `components/pager.tsx` dùng chung.
+  - Danh sách phiếu: phía server, 20 phiếu/trang (`listTicketsPage`), số trang nằm trên URL `?page=`, đổi bộ lọc thì về trang 1. Tổng tiền đã chốt tính trên toàn bộ kết quả lọc qua hàm SQL `ticket_locked_total` (0008).
+  - Thông báo: phía server, 30 cái/trang.
+  - Bảng Quản trị: phía trình duyệt, 20 dòng/trang.
+  - Trang vượt quá số trang sẽ tự về trang cuối.
 
 ### Vòng đời phiếu
 

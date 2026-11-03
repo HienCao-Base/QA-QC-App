@@ -20,6 +20,9 @@ export async function proxy(request: NextRequest) {
     },
   );
 
+  // /logout luôn cho qua: nó tự xóa phiên rồi về /login
+  if (request.nextUrl.pathname.startsWith("/logout")) return response;
+
   const { data } = await supabase.auth.getClaims();
   const isLogin = request.nextUrl.pathname.startsWith("/login");
 
