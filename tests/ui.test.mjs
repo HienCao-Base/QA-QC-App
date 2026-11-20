@@ -131,7 +131,7 @@ describe("Nhóm 7 · Màn hình & mobile", () => {
     "test.qa1": ["/", "/phieu", "/phieu/moi", "/thong-bao"],
     "test.cht1": ["/", "/phieu", "/thong-bao"],
     "test.nv1": ["/", "/phieu", "/thong-bao"],
-    "test.admin": ["/", "/phieu", "/thong-bao", "/admin"],
+    "test.admin": ["/", "/phieu", "/thong-bao", "/admin/viec", "/admin"],
   };
 
   for (const [user, paths] of Object.entries(SCREENS)) {
@@ -427,7 +427,7 @@ describe("Nhóm 2 · Luồng liên role qua giao diện", () => {
   test("LT-05 Admin thấy khiếu nại chờ xử lý, chấp nhận giảm", { timeout: 120_000 }, async () => {
     assert.ok(id, "phụ thuộc LT-01");
     const page = await phone("test.admin");
-    await open(page, "/admin");
+    await open(page, "/admin/viec");
     await page.locator(`a[href='/phieu/${id}']`).first().tap();
     await page.waitForURL(id36, T);
     await page.locator("input[id^='ap-']").first().fill("10000");

@@ -47,13 +47,15 @@ const NAV: Record<Role, NavItem[]> = {
     { href: "/phieu", label: "Phiếu cửa hàng", short: "Phiếu", icon: FileText },
   ],
   admin: [
+    { href: "/admin/viec", label: "Việc của tôi", short: "Việc", icon: House },
     { href: "/admin", label: "Quản trị", short: "Quản trị", icon: Settings },
     { href: "/phieu", label: "Tất cả phiếu", short: "Phiếu", icon: ClipboardList },
   ],
 };
 
 const isActive = (path: string, href: string) =>
-  path === href || (href !== "/phieu" && path.startsWith(href + "/")) || (href === "/phieu" && /^\/phieu\/(?!moi)/.test(path));
+  path === href ||
+  (href !== "/phieu" && href !== "/admin" && path.startsWith(href + "/")) || (href === "/phieu" && /^\/phieu\/(?!moi)/.test(path));
 
 /** Trang chi tiết / tạo phiếu có thanh nút riêng ở đáy nên ẩn thanh tab. */
 const hidesTabBar = (path: string) => path.startsWith("/phieu/");

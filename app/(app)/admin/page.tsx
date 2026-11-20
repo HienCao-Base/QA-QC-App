@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { PageTitle, Section } from "@/components/common";
-import { listTickets } from "@/lib/queries";
-import { TicketList } from "@/components/ticket-card";
+import { PageTitle } from "@/components/common";
 import { cn } from "@/lib/format";
 import { AdminTabs } from "./tabs";
 
@@ -21,10 +19,9 @@ export default async function AdminPage(props: PageProps<"/admin">) {
   const tab = (TABS.find((t) => t.key === sp.tab)?.key ?? "accounts") as TabKey;
   const supabase = await createClient();
 
-  const [{ data: stores }, { data: employees }, appeals] = await Promise.all([
+  const [{ data: stores }, { data: employees }] = await Promise.all([
     supabase.from("stores").select("*").order("code"),
     supabase.from("employees").select("*").order("code"),
-    listTickets(supabase, { appealPending: true, status: ["locked"], orderBy: "locked_at", ascending: true }),
   ]);
   const data =
     tab === "accounts" ? (await supabase.from("profiles").select("*").order("role").order("username")).data
@@ -34,14 +31,7 @@ export default async function AdminPage(props: PageProps<"/admin">) {
 
   return (
     <div className="space-y-4">
-      <PageTitle title="Quản trị" sub="Khiếu nại, tài khoản và dữ liệu nền" />
-      {appeals.length > 0 && (
-        <div className="pb-4">
-          <Section title="Khiếu nại chờ xử lý" count={appeals.length}>
-            <TicketList tickets={appeals} empty="" />
-          </Section>
-        </div>
-      )}
+      <PageTitle title="Quản trị" sub="Tài khoản và dữ liệu nền" />
       <nav aria-label="Danh mục quản trị" className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
         <div className="inline-flex gap-1 rounded-lg bg-muted p-1">
         {TABS.map((t) => (
